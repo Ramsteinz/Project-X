@@ -81,8 +81,7 @@ end
 -- OnLoad Function
 --------------------------------------------------------
 function OnLoad()
-  AnnieData()
-  Menu()
+
 end
 
 -- handles script logic, a pure high speed loop
