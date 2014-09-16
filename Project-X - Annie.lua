@@ -10,7 +10,7 @@ if myHero.charName ~= "Annie" then return end
 --------------------------------------------------------
 --  Update Libs and main Script
 --------------------------------------------------------
-local version = "1.00"
+local version = "1.01"
 local DOWNLOADING_LIBS, DOWNLOAD_COUNT = false, 0
 local UPDATE_NAME = "Project-X - Annie"
 local UPDATE_HOST = "raw.github.com"
@@ -19,6 +19,8 @@ local UPDATE_FILE_PATH = SCRIPT_PATH..UPDATE_NAME..".lua"
 local UPDATE_URL = "http://"..UPDATE_HOST..UPDATE_PATH
 local REQUIRED_LIBS = {
   ["SOW"] = "https://raw.githubusercontent.com/Ramsteinz/Project-X/master/SOW.lua",
+  ["VPrediction"] = "https://raw.githubusercontent.com/Ramsteinz/Project-X/master/VPrediction.lua",
+  ["Prodiction"] = "https://raw.githubusercontent.com/Ramsteinz/Project-X/master/Prodiction.lua",
 }
 
 _G.UseUpdater = true
