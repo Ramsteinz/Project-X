@@ -3,15 +3,15 @@ local version = "1.01"
 _G.UseUpdater = true
 
 local REQUIRED_LIBS = {
-  ["SOW"] = "https://raw.githubusercontent.com/Ramsteinz/Project-X/master/SOW.lua",
+  ["SOW"] = "https://raw.githubusercontent.com/Hellsing/BoL/master/common/SOW.lua",
 }
 
-local DOWLOADING_LIBS, DOWNLOAD_COUNT = false, 0
+local DOWNLOADING_LIBS, DOWNLOAD_COUNT = false, 0
 
 function AfterDownload()
   DOWNLOAD_COUNT = DOWNLOAD_COUNT - 1
   if DOWNLOAD_COUNT == 0 then
-    DOWNLOAD_LIBS = false
+    DOWNLOADING_LIBS = false
     print("<b><font color=\"#6699FF\">Project-X - Annie:</font></b> <font color=\"#FFFFFF\">Required libraries downloaded successfully, please reload (double F9).</font>")
   end
 end
@@ -25,6 +25,8 @@ for DOWNLOAD_LIB_NAME, DOWNLOAD_LIB_URL in pairs(REQUIRED_LIBS) do
     DownloadFile(DOWNLOAD_LIB_URL, LIB_PATH .. DOWNLOAD_LIB_NAME..".lua", AfterDownload)
   end
 end
+
+if DOWNLOADING_LIBS then return end
 
 local UPDATE_NAME = "Project-X - Annie"
 local UPDATE_HOST = "raw.github.com"
