@@ -10,7 +10,7 @@ if myHero.charName ~= "Annie" then return end
 --------------------------------------------------------
 --  Update Libs and main Script
 --------------------------------------------------------
-local version = "1.01"
+local version = "1.00"
 local DOWNLOADING_LIBS, DOWNLOAD_COUNT = false, 0
 local UPDATE_NAME = "Project-X - Annie"
 local UPDATE_HOST = "raw.github.com"
@@ -67,15 +67,6 @@ end
 --------------------------------------------------------
 -- Champion specific data
 --------------------------------------------------------
-function AnnieData()
-  LvlSeq = { 1,2,1,3,1,4,1,2,1,2,4,2,2,3,3,4,3,3 }
-  Skill = {
-    Q = { name = "Disintegrate" },
-    W = { name = "Incinerate" },
-    E = { name = "Molten Shield" },
-    R = { name = "Summon: Tibbers" }
-  }
-end
 
 --------------------------------------------------------
 -- OnLoad Function
@@ -112,10 +103,3 @@ end
 --------------------------------------------------------
 -- Menu
 --------------------------------------------------------
-function Menu()
-  Menu = scriptConfig("Project-X - Annie v."..version.."", "Ramsteinz")
-  
-  Menu:addSubMenu(myHero.charName.." - Combo Settings", "combo")
-    Menu.combo:addParam("comboKey", "Combo Key", SCRIPT_PARAM_ONKEYDOWN, false, 32)
-    Menu.combo:addParam("useQ", "Use "..Skill.Q.name.." (Q) in Combo", SCRIPT_PARAM_ONOFF, true)
-end
