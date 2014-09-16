@@ -81,8 +81,6 @@ end
 -- OnLoad Function
 --------------------------------------------------------
 function OnLoad()
-  VP = VPrediction()
-  SOW = SOW(VP)
   AnnieData()
   Menu()
 end
