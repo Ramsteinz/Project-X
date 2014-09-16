@@ -3,7 +3,7 @@ local version = "1.01"
 _G.UseUpdater = true
 
 local REQUIRED_LIBS = {
-  ["SOW"] = "https://raw.githubusercontent.com/Hellsing/BoL/master/common/SOW.lua",
+  ["SOW"] = "https://raw.githubusercontent.com/Ramsteinz/Project-X/master/SOW.lua",
 }
 
 local DOWNLOADING_LIBS, DOWNLOAD_COUNT = false, 0
