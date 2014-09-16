@@ -10,7 +10,7 @@ if myHero.charName ~= "Annie" then return end
 --------------------------------------------------------
 --  Update Libs and main Script
 --------------------------------------------------------
-local version = "1.01"
+local version = "1.00"
 local DOWNLOADING_LIBS, DOWNLOAD_COUNT = false, 0
 local UPDATE_NAME = "Project-X - Annie"
 local UPDATE_HOST = "raw.github.com"
