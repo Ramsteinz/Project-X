@@ -1,12 +1,27 @@
+--------------------------------------------------------
+--                Project-X Present
+--          
+--                      Annie
+--              
+--                  by Ramsteinz
+--------------------------------------------------------
+if myHero.charName ~= "Annie" then return end
+
+--------------------------------------------------------
+--  Update Libs and main Script
+--------------------------------------------------------
 local version = "1.01"
-
-_G.UseUpdater = true
-
+local DOWNLOADING_LIBS, DOWNLOAD_COUNT = false, 0
+local UPDATE_NAME = "Project-X - Annie"
+local UPDATE_HOST = "raw.github.com"
+local UPDATE_PATH = "/Ramsteinz/Project-X/master/Project-X%20-%20Annie.lua" .. "?rand=" .. math.random(1, 10000)
+local UPDATE_FILE_PATH = SCRIPT_PATH..UPDATE_NAME..".lua"
+local UPDATE_URL = "http://"..UPDATE_HOST..UPDATE_PATH
 local REQUIRED_LIBS = {
   ["SOW"] = "https://raw.githubusercontent.com/Ramsteinz/Project-X/master/SOW.lua",
 }
 
-local DOWNLOADING_LIBS, DOWNLOAD_COUNT = false, 0
+_G.UseUpdater = true
 
 function AfterDownload()
   DOWNLOAD_COUNT = DOWNLOAD_COUNT - 1
@@ -28,12 +43,6 @@ end
 
 if DOWNLOADING_LIBS then return end
 
-local UPDATE_NAME = "Project-X - Annie"
-local UPDATE_HOST = "raw.github.com"
-local UPDATE_PATH = "/Ramsteinz/Project-X/master/Project-X%20-%20Annie.lua" .. "?rand=" .. math.random(1, 10000)
-local UPDATE_FILE_PATH = SCRIPT_PATH..UPDATE_NAME..".lua"
-local UPDATE_URL = "http://"..UPDATE_HOST..UPDATE_PATH
-
 function AutoupdaterMsg(msg) print("<b><font color=\"#6699FF\">"..UPDATE_NAME..":</font></b> <font color=\"#FFFFFF\">"..msg..".</font>") end
 if _G.UseUpdater then
   local ServerData = GetWebResult(UPDATE_HOST, UPDATE_PATH)
@@ -54,7 +63,6 @@ if _G.UseUpdater then
     AutoupdaterMsg("Error downloading version info")
   end
 end
-
 
 -- called once when the script is loaded
 function OnLoad()
