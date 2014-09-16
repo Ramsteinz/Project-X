@@ -20,7 +20,6 @@ local UPDATE_URL = "http://"..UPDATE_HOST..UPDATE_PATH
 local REQUIRED_LIBS = {
   ["SOW"] = "https://raw.githubusercontent.com/Ramsteinz/Project-X/master/SOW.lua",
   ["VPrediction"] = "https://raw.githubusercontent.com/Ramsteinz/Project-X/master/VPrediction.lua",
-  ["Prodiction"] = "https://raw.githubusercontent.com/Ramsteinz/Project-X/master/Prodiction.lua"
 }
 
 _G.UseUpdater = true
