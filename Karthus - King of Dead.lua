@@ -3,6 +3,9 @@
 --          
 --             Karthus - King of Dead
 -- 
+--  v1.01
+--    - Ult Notify modification (No More Spam)
+--  
 --  v1.00
 --    - Released
 --           
@@ -12,7 +15,7 @@ if myHero.charName ~= "Karthus" then return end
 --------------------------------------------------------
 --  Update Libs and Main Script
 --------------------------------------------------------
-local version = "1.00"
+local version = "1.01"
 local DOWNLOADING_LIBS, DOWNLOAD_COUNT = false, 0
 local UPDATE_NAME = "Karthus - King of Dead"
 local UPDATE_HOST = "raw.github.com"
@@ -85,6 +88,7 @@ end
 --------------------------------------------------------
 function OnLoad()
   EACTIVE = false
+  isKillable = 0
   HeroData()
   VP = VPrediction()
   SOW = SOW(VP)
@@ -173,22 +177,16 @@ end
 -- CastR if One or More Target can Be Kill 
 --------------------------------------------------------
 function CastR()
+  isKillable = 0
   players = heroManager.iCount
   for i = 1, players, 1 do
     target = heroManager:getHero(i)
     if target ~= nil and target.team ~= player.team and target.visible and not target.dead then
       rDmg = getDmg("R",target,myHero)
       if rDmg > target.health then
-        if RREADY then
-          if Menu.Ult.notify then
-            PrintChat("<b><font color=\"#FF00FF\">Target Name : [ </font><font color=\"#FF0000\">"..target.name.." </font><font color=\"#FF00FF\">] are Killable with Ult !!!</font></b>")
-          end
-          if Menu.Ult.ping then
-            PingSignal(PING_FALLBACK,target.x,target.y,target.z,2)
-          end
-          if Menu.Ult.auto then
-            CastSpell(_R)
-          end
+        isKillable = isKillable + 1
+        if Menu.Ult.auto then
+          CastSpell(_R)
         end
       end
     end
@@ -228,6 +226,10 @@ end
 -- OnDraw Function
 --------------------------------------------------------
 function OnDraw()
+  if RREADY and isKillable > 0 then
+    local heroPos = WorldToScreen(D3DXVECTOR3(myHero.x,myHero.y,myHero.z))
+    DrawText("Target Killable : "..isKillable, 24, heroPos.x - 80, heroPos.y - 150,ARGB(255,0,255,0))
+  end
   if Menu.Draw.enable then
     if QREADY and Menu.Draw.drawQ then
       DrawCircle(myHero.x, myHero.y, myHero.z, Skill.Q.range, 0x111111)
@@ -273,8 +275,6 @@ function Menu()
     Menu.AutoE:addParam("mana", "Min. (%) Mana to Cast", SCRIPT_PARAM_SLICE, 20, 0, 100, 0)
   
   Menu:addSubMenu("(R) Ult Settings", "Ult")
-    Menu.Ult:addParam("notify", "Notify Killable Enemies", SCRIPT_PARAM_ONOFF, true)
-    Menu.Ult:addParam("ping", "Ping Killable Enemies", SCRIPT_PARAM_ONOFF, true)
     Menu.Ult:addParam("auto", "Auto Cast Ult on Killable Enemies", SCRIPT_PARAM_ONOFF, false)
   
   Menu:addSubMenu("Farm Settings", "Farm")
