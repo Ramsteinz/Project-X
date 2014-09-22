@@ -2,6 +2,8 @@
 --                Ramsteinz Present
 --          
 --             Karthus - King of Dead
+--  v1.03
+--    - Bugs Fix
 -- 
 --  v1.02
 --    - Prodiction 1.4 support [VIP] 
@@ -20,7 +22,7 @@ if myHero.charName ~= "Karthus" then return end
 --------------------------------------------------------
 --  Update Libs and Main Script
 --------------------------------------------------------
-local version = "1.02"
+local version = "1.03"
 local DOWNLOADING_LIBS, DOWNLOAD_COUNT = false, 0
 local UPDATE_NAME = "Karthus - King of Dead"
 local UPDATE_HOST = "raw.github.com"
@@ -185,20 +187,16 @@ function CastW()
     if GetDistance(ts.target) <= Skill.W.range then
       if VIP_USER then
         if Menu.Combo.predict == 1 then
-          local CastPosition, HitChance, nTargets = VP:GetCircularAOECastPosition(ts.target, Skill.W.delay, Skill.W.width, Skill.W.range + 50, Skill.W.speed, myHero)
+          local CastPosition, HitChance, Position = VP:GetLineCastPosition(ts.target, Skill.W.delay, Skill.W.width, Skill.W.range + 50, Skill.W.speed, myHero, false)
           if HitChance >= 2 then
-            if Menu.Combo.packet then
-              Packet("S_CAST", { spellID = _W, fromX = CastPosition.x, fromY = CastPosition.z, toX = CastPosition.x, toY = CastPosition.z }):send()
-            else
-              CastSpell(_W, CastPosition.x, CastPosition.z)
-            end
+            CastSpell(_W, CastPosition.x, CastPosition.z)
           end
         elseif Menu.Combo.predict == 2 then
-          local CastPosition, Infos = UseW:GetPrediction(ts.target)
+          local CastPosition = UseW:GetPrediction(ts.target)
           CastSpell(_W, CastPosition.x, CastPosition.z)
         end
       else
-        local CastPosition, HitChance, nTargets = VP:GetCircularAOECastPosition(ts.target, Skill.W.delay, Skill.W.width, Skill.W.range + 50, Skill.W.speed, myHero)
+        local CastPosition, HitChance, Position = VP:GetLineCastPosition(ts.target, Skill.W.delay, Skill.W.width, Skill.W.range + 50, Skill.W.speed, myHero, false)
         if HitChance >= 2 then 
           CastSpell(_W, CastPosition.x, CastPosition.z)
         end         
@@ -292,6 +290,9 @@ function OnDraw()
       DrawCircle2(myHero.x, myHero.y, myHero.z, Skill.E.range, ARGB(150, 128, 128, 128))
     end
   end
+  if ts.target ~= nil then
+    DrawCircle2(ts.target.x, ts.target.y, ts.target.z, 150, ARGB(150, 128, 128, 128))
+  end
 end
 
 function DrawCircle2(x, y, z, radius, color)
@@ -378,7 +379,7 @@ function Menu()
   Menu:addSubMenu("Orbwalking Settings", "Orbwalking")
     SOW:LoadToMenu(Menu.Orbwalking)
     
-  ts = TargetSelector(TARGET_LESS_CAST_PRIORITY, Skill.W.range, DAMAGE_MAGIC, true)
+  ts = TargetSelector(TARGET_LESS_CAST_PRIORITY, Skill.W.range + 50, DAMAGE_MAGIC, true)
   ts.name = "Karthus"
   Menu:addTS(ts)
   
