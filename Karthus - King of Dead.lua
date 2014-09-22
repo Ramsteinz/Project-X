@@ -3,8 +3,13 @@
 --          
 --             Karthus - King of Dead
 -- 
+--  v1.02
+--    - Prodiction 1.4 support [VIP] 
+--    - Packet Cast added [VIP]
+--    - Free Lag Circle added [Free\VIP]
+--  
 --  v1.01
---    - Ult Notify modification (No More Spam)
+--    - Ult Notify modification (No More Spam) [Free\VIP]
 --  
 --  v1.00
 --    - Released
@@ -15,17 +20,26 @@ if myHero.charName ~= "Karthus" then return end
 --------------------------------------------------------
 --  Update Libs and Main Script
 --------------------------------------------------------
-local version = "1.01"
+local version = "1.02"
 local DOWNLOADING_LIBS, DOWNLOAD_COUNT = false, 0
 local UPDATE_NAME = "Karthus - King of Dead"
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/Ramsteinz/Project-X/master/Karthus%20-%20King%20of%20Dead.lua" .. "?rand=" .. math.random(1, 10000)
 local UPDATE_FILE_PATH = SCRIPT_PATH..UPDATE_NAME..".lua"
 local UPDATE_URL = "http://"..UPDATE_HOST..UPDATE_PATH
-local REQUIRED_LIBS = {
-  ["SOW"] = "https://raw.githubusercontent.com/Ramsteinz/Project-X/master/SOW.lua",
-  ["VPrediction"] = "https://raw.githubusercontent.com/Ramsteinz/Project-X/master/VPrediction.lua",
-}
+local REQUIRED_LIBS = nil
+if VIP_USER then
+  REQUIRED_LIBS = {
+    ["SOW"] = "https://raw.githubusercontent.com/Ramsteinz/Project-X/master/SOW.lua",
+    ["VPrediction"] = "https://raw.githubusercontent.com/Ramsteinz/Project-X/master/VPrediction.lua",
+    ["Prodiction"] = "https://raw.githubusercontent.com/Ramsteinz/Project-X/master/Prodiction.lua"
+  }
+else
+  REQUIRED_LIBS = {
+    ["SOW"] = "https://raw.githubusercontent.com/Ramsteinz/Project-X/master/SOW.lua",
+    ["VPrediction"] = "https://raw.githubusercontent.com/Ramsteinz/Project-X/master/VPrediction.lua"
+  }
+end
 
 _G.UseUpdater = true
 
@@ -90,6 +104,11 @@ function OnLoad()
   EACTIVE = false
   isKillable = 0
   HeroData()
+  if VIP_USER then
+    Prod = ProdictManager.GetInstance()
+    UseQ = Prod:AddProdictionObject(_Q, Skill.Q.range, Skill.Q.speed, Skill.Q.delay, Skill.Q.width)
+    UseW = Prod:AddProdictionObject(_W, Skill.W.range, Skill.W.speed, Skill.W.delay, Skill.W.width)
+  end
   VP = VPrediction()
   SOW = SOW(VP)
   Menu()
@@ -137,9 +156,25 @@ end
 function CastQ()
   if ValidTarget(ts.target, Skill.Q.range) then
     if  GetDistance(ts.target) < Skill.Q.range then
-      local CastPosition, HitChance, nTargets = VP:GetCircularAOECastPosition(ts.target, Skill.Q.delay, Skill.Q.width, Skill.Q.range, Skill.Q.speed, myHero)
-      if HitChance >= 2 then
-        CastSpell(_Q, CastPosition.x, CastPosition.z)
+      if VIP_USER then
+        if Menu.Combo.predict == 1 then
+          local CastPosition, HitChance, nTargets = VP:GetCircularAOECastPosition(ts.target, Skill.Q.delay, Skill.Q.width, Skill.Q.range + 50, Skill.Q.speed, myHero)
+          if HitChance >= 2 then
+            if Menu.Combo.packet then
+              Packet("S_CAST", { spellID = _Q, fromX = CastPosition.x, fromY = CastPosition.z, toX = CastPosition.x, toY = CastPosition.z }):send()
+            else
+              CastSpell(_Q, CastPosition.x, CastPosition.z)
+            end
+          end
+        elseif Menu.Combo.predict == 2 then
+          local CastPosition, Infos = UseQ:GetPrediction(ts.target)
+          CastSpell(_Q, CastPosition.x, CastPosition.z)
+        end
+      else
+        local CastPosition, HitChance, nTargets = VP:GetCircularAOECastPosition(ts.target, Skill.Q.delay, Skill.Q.width, Skill.Q.range + 50, Skill.Q.speed, myHero)
+        if HitChance >= 2 then 
+          CastSpell(_Q, CastPosition.x, CastPosition.z)
+        end         
       end
     end
   end
@@ -148,11 +183,27 @@ end
 function CastW()
   if ValidTarget(ts.target, Skill.W.range) then
     if GetDistance(ts.target) <= Skill.W.range then
-      local CastPosition, HitChance, Position = VP:GetLineCastPosition(ts.target, Skill.W.delay, Skill.W.width, Skill.W.range, Skill.W.speed, myHero, Skill.W.col)
-      if HitChance >= 2 then
-        CastSpell(_W, CastPosition.x, CastPosition.z)
+      if VIP_USER then
+        if Menu.Combo.predict == 1 then
+          local CastPosition, HitChance, nTargets = VP:GetCircularAOECastPosition(ts.target, Skill.W.delay, Skill.W.width, Skill.W.range + 50, Skill.W.speed, myHero)
+          if HitChance >= 2 then
+            if Menu.Combo.packet then
+              Packet("S_CAST", { spellID = _W, fromX = CastPosition.x, fromY = CastPosition.z, toX = CastPosition.x, toY = CastPosition.z }):send()
+            else
+              CastSpell(_W, CastPosition.x, CastPosition.z)
+            end
+          end
+        elseif Menu.Combo.predict == 2 then
+          local CastPosition, Infos = UseW:GetPrediction(ts.target)
+          CastSpell(_W, CastPosition.x, CastPosition.z)
+        end
+      else
+        local CastPosition, HitChance, nTargets = VP:GetCircularAOECastPosition(ts.target, Skill.W.delay, Skill.W.width, Skill.W.range + 50, Skill.W.speed, myHero)
+        if HitChance >= 2 then 
+          CastSpell(_W, CastPosition.x, CastPosition.z)
+        end         
       end
-    end
+    end    
   end
 end
 
@@ -232,15 +283,40 @@ function OnDraw()
   end
   if Menu.Draw.enable then
     if QREADY and Menu.Draw.drawQ then
-      DrawCircle(myHero.x, myHero.y, myHero.z, Skill.Q.range, 0x111111)
+      DrawCircle2(myHero.x, myHero.y, myHero.z, Skill.Q.range, ARGB(150, 128, 128, 128))
     end
     if WREADY and Menu.Draw.drawW then
-      DrawCircle(myHero.x, myHero.y, myHero.z, Skill.W.range, 0x111111)
+      DrawCircle2(myHero.x, myHero.y, myHero.z, Skill.W.range, ARGB(150, 128, 128, 128))
     end
     if EREADY and Menu.Draw.drawE then
-      DrawCircle(myHero.x, myHero.y, myHero.z, Skill.E.range, 0x111111)
+      DrawCircle2(myHero.x, myHero.y, myHero.z, Skill.E.range, ARGB(150, 128, 128, 128))
     end
   end
+end
+
+function DrawCircle2(x, y, z, radius, color)
+  local vPos1 = Vector(x, y, z)
+  local vPos2 = Vector(cameraPos.x, cameraPos.y, cameraPos.z)
+  local tPos = vPos1 - (vPos1 - vPos2):normalized() * radius
+  local sPos = WorldToScreen(D3DXVECTOR3(tPos.x, tPos.y, tPos.z))
+  if Menu.Draw.freeLag and OnScreen({ x = sPos.x, y = sPos.y }, { x = sPos.x, y = sPos.y })  then
+    DrawCircleNextLvl(x, y, z, radius, 1, color, 75)
+  else
+    DrawCircle(x, y, z, radius, 0xFF111111)
+  end
+end
+
+function DrawCircleNextLvl(x, y, z, radius, width, color, chordlength)
+  radius = radius or 300
+  quality = math.max(8,math.floor(180/math.deg((math.asin((chordlength/(2*radius)))))))
+  quality = 2 * math.pi / quality
+  radius = radius*.92
+  local points = {}
+  for theta = 0, 2 * math.pi + quality, quality do
+    local c = WorldToScreen(D3DXVECTOR3(x + radius * math.cos(theta), y, z - radius * math.sin(theta)))
+    points[#points + 1] = D3DXVECTOR2(c.x, c.y)
+  end
+  DrawLines2(points, width or 1, color or 4294967295)
 end
 
 --------------------------------------------------------
@@ -266,7 +342,13 @@ function Menu()
   Menu = scriptConfig("Karthus - King of Death v"..version, "Ramsteinz")
   
   Menu:addSubMenu("Combo Settings", "Combo")
+    if VIP_USER then
+      Menu.Combo:addParam("predict", "Prediction settings to load", SCRIPT_PARAM_LIST, 1, { "VPred", "Prodiction"})
+    end
     Menu.Combo:addParam("key", "Combo Key", SCRIPT_PARAM_ONKEYDOWN, false, 32)
+    if VIP_USER then
+      Menu.Combo:addParam("packet", "Use packet to cast spells", SCRIPT_PARAM_ONOFF, false)
+    end
     Menu.Combo:addParam("useQ", "(Q) - Use "..Skill.Q.name.." in combo", SCRIPT_PARAM_ONOFF, true)
     Menu.Combo:addParam("useW", "(W) - Use "..Skill.W.name.." in combo", SCRIPT_PARAM_ONOFF, true)
     
@@ -284,6 +366,7 @@ function Menu()
     
   Menu:addSubMenu("Draw Settings", "Draw")
     Menu.Draw:addParam("enable", "Enable Drawing", SCRIPT_PARAM_ONOFF, true)
+    Menu.Draw:addParam("freeLag", "Use Free Lag Draw", SCRIPT_PARAM_ONOFF, true)
     Menu.Draw:addParam("drawQ", "(Q) - Draw "..Skill.Q.name.." range", SCRIPT_PARAM_ONOFF, true)
     Menu.Draw:addParam("drawW", "(W) - Draw "..Skill.W.name.." range", SCRIPT_PARAM_ONOFF, false)
     Menu.Draw:addParam("drawE", "(E) - Draw "..Skill.E.name.." range", SCRIPT_PARAM_ONOFF, false)
