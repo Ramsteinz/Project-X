@@ -7,7 +7,7 @@
 --    - Released
 --           
 --------------------------------------------------------
-if myHero.charName ~= "Kha'Zix" then return end
+if myHero.charName ~= "Khazix" then return end
 
 --------------------------------------------------------
 --  Update Libs and Main Script
