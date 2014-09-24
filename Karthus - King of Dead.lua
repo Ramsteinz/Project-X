@@ -2,6 +2,14 @@
 --                Ramsteinz Present
 --          
 --             Karthus - King of Dead
+--  
+--  v1.04
+--    - Harass (Q) mode added [free/Vip]
+--    - LastHit (Q) mode added [Free/Vip]
+--        - Can be auto when not Combo.key or Harass.key down
+--    - Added some target draw options [Free/Vip]
+--    - Added Circle draw on (Q) killable minions [Free/Vip]
+--  
 --  v1.03
 --    - Bugs Fix
 -- 
@@ -22,7 +30,7 @@ if myHero.charName ~= "Karthus" then return end
 --------------------------------------------------------
 --  Update Libs and Main Script
 --------------------------------------------------------
-local version = "1.03"
+local version = "1.04"
 local DOWNLOADING_LIBS, DOWNLOAD_COUNT = false, 0
 local UPDATE_NAME = "Karthus - King of Dead"
 local UPDATE_HOST = "raw.github.com"
@@ -129,6 +137,7 @@ function OnTick()
   enemyMinions:update()
   
   CastR()
+  
   if Menu.Combo.key then
     if QREADY and Menu.Combo.useQ then
       CastQ()
@@ -137,17 +146,53 @@ function OnTick()
       CastW()
     end
   end
+  
   if EREADY and Menu.AutoE.enable then
     CastE()
+  end
+  
+  if Menu.Harass.key then
+    Harass()
   end
   
   if Menu.Farm.key then
     Farm()
   end
   
+  if Menu.LastHit.key or Menu.LastHit.auto and not Menu.Harass.key and not Menu.Combo.key then
+    LastHit()
+  end
+  
   if Menu.Extra.level then
     if Menu.Extra.seq == 1 then
       autoLevelSetSequence(LvlSeqQERW)
+    end
+  end
+end
+
+--------------------------------------------------------
+-- Harass Functions
+--------------------------------------------------------
+function Harass()
+  if ValidTarget(ts.target, Skill.Q.range) then
+    if GetDistance(ts.target) < Skill.Q.range then
+      if VIP_USER then
+        if Menu.Combo.predict == 1 then
+          local CastPosition, HitChance, nTargets = VP:GetCircularAOECastPosition(ts.target, Skill.Q.delay, Skill.Q.width, Skill.Q.range + 50, Skill.Q.speed, myHero)
+          if HitChance >= 2 then
+            if Menu.Combo.packet then
+              Packet("S_CAST", { spellID = _Q, fromX = CastPosition.x, fromY = CastPosition.z, toX = CastPosition.x, toY = CastPosition.z, targetNetworkId = CastPosition.networkID }):send()
+            else
+              CastSpell(_Q, CastPosition.x, CastPosition.z)
+            end
+          end
+        end
+      else
+        local CastPosition, HitChance, nTargets = VP:GetCircularAOECastPosition(ts.target, Skill.Q.delay, Skill.Q.width, Skill.Q.range + 50, Skill.Q.speed, myHero)
+        if HitChance >= 2 then
+          CastSpell(_Q, CastPosition.x, CastPosition.z)
+        end
+      end
     end
   end
 end
@@ -163,7 +208,7 @@ function CastQ()
           local CastPosition, HitChance, nTargets = VP:GetCircularAOECastPosition(ts.target, Skill.Q.delay, Skill.Q.width, Skill.Q.range + 50, Skill.Q.speed, myHero)
           if HitChance >= 2 then
             if Menu.Combo.packet then
-              Packet("S_CAST", { spellID = _Q, fromX = CastPosition.x, fromY = CastPosition.z, toX = CastPosition.x, toY = CastPosition.z }):send()
+              Packet("S_CAST", { spellID = _Q, fromX = CastPosition.x, fromY = CastPosition.z, toX = CastPosition.x, toY = CastPosition.z, targetNetworkId = CastPosition.networkID }):send()
             else
               CastSpell(_Q, CastPosition.x, CastPosition.z)
             end
@@ -250,8 +295,11 @@ function Farm()
     if enemyMinions ~= nil then
       for _, minion in pairs(enemyMinions.objects) do
         if ValidTarget(minion, Skill.Q.range) then
-          if minion.health <= getDmg("AD", minion, myHero) then
-            myHero:Attack(minion)
+          if minion.health <= getDmg("Q", minion, myHero) then
+            local CastPosition, HitChance, nTargets = VP:GetCircularAOECastPosition(minion, Skill.Q.delay, Skill.Q.width, Skill.Q.range, Skill.Q.speed, myHero)
+              if HitChance >= 2 and nTargets >= 1 then
+                CastSpell(_Q, CastPosition.x, CastPosition.z)
+              end
           else
             if Menu.Farm.useQ then
               local CastPosition, HitChance, nTargets = VP:GetCircularAOECastPosition(minion, Skill.Q.delay, Skill.Q.width, Skill.Q.range, Skill.Q.speed, myHero)
@@ -270,6 +318,34 @@ function Farm()
     end
   end
 end
+
+--------------------------------------------------------
+-- LastHit Function
+--------------------------------------------------------
+function LastHit()
+  if enemyMinions ~= nil then
+    for _, minion in pairs(enemyMinions.objects) do
+      if ValidTarget(minion, Skill.Q.range) then
+        local CastPosition, HitChance, nTargets = VP:GetCircularAOECastPosition(minion, Skill.Q.delay, Skill.Q.width, Skill.Q.range, Skill.Q.speed, myHero)
+        if minion.health < getDmg("Q", minion, myHero, 1) then
+          if HitChance >= 2 and nTargets == 1 then
+            if not Menu.Combo.key and Menu.LastHit.auto then
+              CastSpell(_Q, CastPosition.x, CastPosition.z)
+            end
+            if Menu.LastHit.key then
+              CastSpell(_Q, CastPosition.x, CastPosition.z)
+            end
+          end
+        end
+      end
+    end
+  end
+end
+
+--------------------------------------------------------
+-- Farm Function
+--------------------------------------------------------
+
 
 --------------------------------------------------------
 -- OnDraw Function
@@ -291,7 +367,23 @@ function OnDraw()
     end
   end
   if ts.target ~= nil then
-    DrawCircle2(ts.target.x, ts.target.y, ts.target.z, 150, ARGB(150, 128, 128, 128))
+    local heroPos = WorldToScreen(D3DXVECTOR3(myHero.x,myHero.y,myHero.z))
+    local tsPos = WorldToScreen(D3DXVECTOR3(ts.target.x, ts.target.y, ts.target.z))
+    if Menu.Draw.Target.line then
+      DrawLine(heroPos.x, heroPos.y, tsPos.x, tsPos.y, 5, ARGB(75, 128, 128, 128))
+    end
+    if Menu.Draw.Target.circle then
+      DrawCircle2(ts.target.x, ts.target.y, ts.target.z, 150, ARGB(75, 128, 128, 128))
+    end
+  end
+  if enemyMinions ~= nil then
+    for _, minion in pairs(enemyMinions.objects) do
+      if ValidTarget(minion, Skill.Q.range) then
+        if  minion.health < getDmg("Q", minion, myHero) then
+          DrawCircle2(minion.x, minion.y, minion.z, Vector(minion.x, minion.y, minion.z):dist(Vector(minion.minBBox.x, minion.minBBox.y, minion.minBBox.z)), ARGB(175, 255, 50, 0))
+        end
+      end
+    end
   end
 end
 
@@ -360,10 +452,17 @@ function Menu()
   Menu:addSubMenu("(R) Ult Settings", "Ult")
     Menu.Ult:addParam("auto", "Auto Cast Ult on Killable Enemies", SCRIPT_PARAM_ONOFF, false)
   
+  Menu:addSubMenu("Harass Settings", "Harass")
+    Menu.Harass:addParam("key", "Harass Key", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
+  
   Menu:addSubMenu("Farm Settings", "Farm")
     Menu.Farm:addParam("key", "Farm Key", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("V"))
     Menu.Farm:addParam("useQ", "(Q) - Use "..Skill.Q.name.." to farm", SCRIPT_PARAM_ONOFF, true)
     Menu.Farm:addParam("useE", "(E) - Use "..Skill.E.name.." to farm", SCRIPT_PARAM_ONOFF, false)
+  
+  Menu:addSubMenu("Last Hit Settings", "LastHit")
+    Menu.LastHit:addParam("key", "Last Hit key", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("X"))
+    Menu.LastHit:addParam("auto", "Auto Last Hit", SCRIPT_PARAM_ONOFF, false)
     
   Menu:addSubMenu("Draw Settings", "Draw")
     Menu.Draw:addParam("enable", "Enable Drawing", SCRIPT_PARAM_ONOFF, true)
@@ -371,6 +470,9 @@ function Menu()
     Menu.Draw:addParam("drawQ", "(Q) - Draw "..Skill.Q.name.." range", SCRIPT_PARAM_ONOFF, true)
     Menu.Draw:addParam("drawW", "(W) - Draw "..Skill.W.name.." range", SCRIPT_PARAM_ONOFF, false)
     Menu.Draw:addParam("drawE", "(E) - Draw "..Skill.E.name.." range", SCRIPT_PARAM_ONOFF, false)
+    Menu.Draw:addSubMenu("Draw Target Settings", "Target")
+      Menu.Draw.Target:addParam("circle", "Draw Target Circle", SCRIPT_PARAM_ONOFF, true)
+      Menu.Draw.Target:addParam("line", "Draw Target Line", SCRIPT_PARAM_ONOFF, true)
     
   Menu:addSubMenu("Extra Settings", "Extra")
     Menu.Extra:addParam("level", "Auto Level enable", SCRIPT_PARAM_ONOFF, false)
