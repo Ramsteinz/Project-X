@@ -12,7 +12,7 @@ if myHero.charName ~= "Rengar" then return end
 --------------------------------------------------------
 --  Update Libs and Main Script
 --------------------------------------------------------
-local version = "1.03"
+local version = "1.04"
 local DOWNLOADING_LIBS, DOWNLOAD_COUNT = false, 0
 local UPDATE_NAME = "Rengar - The Pentakiller"
 local UPDATE_HOST = "raw.github.com"
@@ -256,7 +256,6 @@ end
 
 function AutoIgnite()
   if ValidTarget(ts.target, 600) and ts.target.health < getDmg("IGNITE", ts.target, myHero) then
-      PrintChat("Target HP : "..ts.target.health.."   Ignite DMG : "..getDmg("IGNITE", ts.target, myHero))
       if IREADY then
           CastSpell(IG, ts.target)
       end
