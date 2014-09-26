@@ -12,7 +12,7 @@ if myHero.charName ~= "Rengar" then return end
 --------------------------------------------------------
 --  Update Libs and Main Script
 --------------------------------------------------------
-local version = "1.01"
+local version = "1.03"
 local DOWNLOADING_LIBS, DOWNLOAD_COUNT = false, 0
 local UPDATE_NAME = "Rengar - The Pentakiller"
 local UPDATE_HOST = "raw.github.com"
@@ -77,6 +77,13 @@ if _G.UseUpdater then
 end
 
 --------------------------------------------------------
+-- Variables
+--------------------------------------------------------
+local IG = nil
+local TIASlot, RHSlot,  BCSlot, BRKSlot = nil, nil, nil, nil
+local TIAReady, RHReady, BCReady, BRKReady = false, false, false, false
+
+--------------------------------------------------------
 -- Champion Specific Data
 --------------------------------------------------------
 function HeroData()
@@ -84,7 +91,7 @@ function HeroData()
   Skill = {
     Q = { name = "Savagery", range = myHero.range + GetDistance(myHero, myHero.minBBox) },
     W = { name = "Battle Roar", range = 400 },
-    E = { name = "Bola Strike", range = 1000, delay = 0.5, width = 70, speed = 1200, col = true },
+    E = { name = "Bola Strike", range = 1000, delay = 0.5, width = 70, speed = 1500, col = true },
     R = { name = "Thrill of the Hunt" }
   }
 end
@@ -104,16 +111,30 @@ end
 --------------------------------------------------------
 -- OnTick Function
 --------------------------------------------------------
-function OnTick()
+function OnTick()  
+  TIASlot = GetInventorySlotItem(3077) --
+  RHSlot = GetInventorySlotItem(3074) --
+  BCSlot = GetInventorySlotItem(3144) --
+  BRKSlot = GetInventorySlotItem(3153) --
+
   QREADY = myHero:CanUseSpell(_Q) == READY
   WREADY = myHero:CanUseSpell(_W) == READY
   EREADY = myHero:CanUseSpell(_E) == READY
+  IREADY = (IG ~= nil and myHero:CanUseSpell(IG) == READY)
+  TIAReady = (TIASlot ~= nil and myHero:CanUseSpell(TIASlot) == READY)
+  RHReady = (RHSlot ~= nil and myHero:CanUseSpell(RHSlot) == READY)
+  BCReady = (BCSlot ~= nil and myHero:CanUseSpell(BCSlot) == READY)
+  BRKReady = (BRKSlot ~= nil and myHero:CanUseSpell(BRKSlot) == READY)
   
   ts:update()
   enemyMinions:update()
   
   if Menu.Combo.key then
       Combo()
+      CastItem()
+      if IG ~= nil and Menu.Combo.ignite then
+          AutoIgnite()
+      end
   end
   if Menu.Harass.key then
       Harass()
@@ -218,6 +239,30 @@ function CastQ(Target)
     end
 end
 
+function CastItem()
+    if TIAReady and ValidTarget(ts.target, Skill.Q.range) then
+        CastSpell(TIASlot)
+    end
+    if RHReady and ValidTarget(ts.target, Skill.Q.range) then
+        CastSpell(RHSlot)
+    end
+    if BCReady and ValidTarget(ts.target, Skill.W.range) then
+        CastSpell(BCSlot, ts.target)
+    end
+    if BRKReady and ValidTarget(ts.target, Skill.W.range) then
+        CastSpell(BRKSlot, ts.target)
+    end
+end
+
+function AutoIgnite()
+  if ValidTarget(ts.target, 600) and ts.target.health < getDmg("IGNITE", ts.target, myHero) then
+      PrintChat("Target HP : "..ts.target.health.."   Ignite DMG : "..getDmg("IGNITE", ts.target, myHero))
+      if IREADY then
+          CastSpell(IG, ts.target)
+      end
+  end
+end
+
 --------------------------------------------------------
 -- OnDraw Function
 --------------------------------------------------------
@@ -262,10 +307,19 @@ end
 -- Create Menu
 --------------------------------------------------------
 function Menu()
-  Menu = scriptConfig("Rengar v"..version, "Ramsteinz")
+  if myHero:GetSpellData(SUMMONER_1).name:find("summonerdot") then
+      IG = SUMMONER_1
+  elseif myHero:GetSpellData(SUMMONER_2).name:find("summonerdot") then
+      IG = SUMMONER_2
+  end
+
+  Menu = scriptConfig("Rengar - The Pentakiller v"..version, "Ramsteinz")
   
   Menu:addSubMenu("Combo Settings", "Combo")
     Menu.Combo:addParam("key", "Combo Key", SCRIPT_PARAM_ONKEYDOWN, false, 32)
+    if IG ~= nil then
+        Menu.Combo:addParam("ignite", "Auto Ignite on killable target", SCRIPT_PARAM_ONOFF, true)
+    end
       
   Menu.Combo:addSubMenu("Normal Stance Settings", "Normal")
     Menu.Combo.Normal:addParam("useQ", "(Q) - Use "..Skill.Q.name, SCRIPT_PARAM_ONOFF, true)
