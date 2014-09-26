@@ -80,7 +80,7 @@ end
 -- Champion Specific Data
 --------------------------------------------------------
 function HeroData()
-  LvlSeqRQEW = { 3,1,2,1,1,4,1,3,1,3,4,3,3,2,2,4,2,2 }
+  RQEW = { 3,1,2,1,1,4,1,3,1,3,4,3,3,2,2,4,2,2 }
   Skill = {
     Q = { name = "Savagery", range = myHero.range + GetDistance(myHero, myHero.minBBox) },
     W = { name = "Battle Roar", range = 400 },
@@ -121,8 +121,11 @@ function OnTick()
   if Menu.LaneClear.key then
       LaneClear()
   end
-
-  autoLevelSetSequence(LvlSeqRQEW)
+  if Menu.Extra.Level.auto then
+      if Menu.Extra.Level.seq == 1 then
+          autoLevelSetSequence(RQEW)
+      end
+  end
 end
 
 --------------------------------------------------------
@@ -276,6 +279,11 @@ function Menu()
     Menu.Draw:addParam("ad", "(AD) - Draw Attack range", SCRIPT_PARAM_ONOFF, true)
     Menu.Draw:addParam("w", "(W) - Draw "..Skill.W.name.." range", SCRIPT_PARAM_ONOFF, true)
     Menu.Draw:addParam("e", "(E) - Draw "..Skill.E.name.." range", SCRIPT_PARAM_ONOFF, true)
+    
+  Menu:addSubMenu("Extra Settings", "Extra")
+    Menu.Extra:addSubMenu("Auto Level", "Level")
+    Menu.Extra.Level:addParam("auto", "Enable auto level", SCRIPT_PARAM_ONOFF, false)
+    Menu.Extra.Level:addParam("seq", "Auto Leel Sequence", SCRIPT_PARAM_LIST, 1, { "RQEW" })
       
   Menu:addSubMenu("Orbwalking Settings", "Orbwalking")
     SOW:LoadToMenu(Menu.Orbwalking)
