@@ -80,11 +80,11 @@ end
 -- Champion Specific Data
 --------------------------------------------------------
 function HeroData()
-  LvlSeqREQW = { 3,1,2,3,3,4,1,3,1,3,4,1,1,2,2,4,2,2 }
+  LvlSeqRQEW = { 3,1,2,1,1,4,1,3,1,3,4,3,3,2,2,4,2,2 }
   Skill = {
     Q = { name = "Savagery", range = myHero.range + GetDistance(myHero, myHero.minBBox) },
     W = { name = "Battle Roar", range = 400 },
-    E = { name = "Bola Strike", range = 1000, delay = 0.5, width = 70, speed = 1500, col = true },
+    E = { name = "Bola Strike", range = 1000, delay = 0.5, width = 70, speed = 1200, col = true },
     R = { name = "Thrill of the Hunt" }
   }
 end
@@ -94,57 +94,99 @@ end
 --------------------------------------------------------
 function OnLoad()
   Ferocity = false
+  Stealth = false
   HeroData()
   VP = VPrediction()
   SOW = SOW(VP)
   Menu()
 end
 
+--------------------------------------------------------
+-- OnTick Function
+--------------------------------------------------------
 function OnTick()
   QREADY = myHero:CanUseSpell(_Q) == READY
   WREADY = myHero:CanUseSpell(_W) == READY
   EREADY = myHero:CanUseSpell(_E) == READY
   
   ts:update()
+  enemyMinions:update()
   
   if Menu.Combo.key then
-      if not Ferocity then
-          if Menu.Combo.Normal.useE and EREADY then
-              CastE()
-          end
-          if Menu.Combo.Normal.useW and WREADY then
-              CastW()
-          end
-          if Menu.Combo.Normal.useQ and QREADY then
-              CastQ()
-          end
-      else
-          if Menu.Combo.Ferocity.useW and WREADY then
-              CastWFerocity()
-          end
-          if Menu.Combo.Ferocity.useQ and QREADY then
-              CastQ()
-          end
-          if Menu.Combo.Ferocity.useE and EREADY then
-              CastE()
-          end
-      end
+      Combo()
+  end
+  if Menu.Harass.key then
+      Harass()
+  end
+  if Menu.LaneClear.key then
+      LaneClear()
   end
 
-  autoLevelSetSequence(LvlSeqREQW)
+  autoLevelSetSequence(LvlSeqRQEW)
 end
 
-function CastE()
-    if ValidTarget(ts.target, Skill.E.range) then
-        local CastPosition, HitChance, Position = VP:GetLineCastPosition(ts.target, Skill.E.delay, Skill.E.width, Skill.E.range, Skill.E.speed, myHero, true)
+--------------------------------------------------------
+-- Spells Function
+--------------------------------------------------------
+function Combo()
+    if not Ferocity then
+        if Menu.Combo.Normal.useE and EREADY and not Stealth then
+            CastE(ts.target)
+        end
+        if Menu.Combo.Normal.useW and WREADY then
+            CastW(ts.target)
+        end
+        if Menu.Combo.Normal.useQ and QREADY then
+            CastQ(ts.target)
+        end
+    else
+        if Menu.Combo.Ferocity.useW and WREADY then
+            CastWFerocity()
+        end
+        if Menu.Combo.Ferocity.useQ and QREADY then
+              CastQ(ts.target)
+        end
+        if Menu.Combo.Ferocity.useE and EREADY then
+            CastE(ts.target)
+        end
+    end
+end
+
+function Harass()
+    if not Ferocity then
+        if Menu.Harass.useE and EREADY and not Stealth then
+            CastE(ts.target)
+        end
+    end
+end
+
+function LaneClear()
+    if enemyMinions ~= nil then
+        for _, minion in pairs(enemyMinions.objects) do
+            if Menu.LaneClear.useQ then
+                CastQ(minion)
+            end
+            if Menu.LaneClear.useW then
+                CastW(minion)
+            end
+            if Menu.LaneClear.useE then
+                CastE(minion)
+            end
+        end
+    end
+end
+
+function CastE(Target)
+    if ValidTarget(Target, Skill.E.range) then
+        local CastPosition, HitChance, Position = VP:GetLineCastPosition(Target, Skill.E.delay, Skill.E.width, Skill.E.range, Skill.E.speed, myHero, true)
         if HitChance >= 2 then
             CastSpell(_E,CastPosition.x, CastPosition.z)
         end    
     end
 end
 
-function CastW()
-    if ValidTarget(ts.target, Skill.W.range -10) then
+function CastW(Target)
+    if ValidTarget(Target, Skill.W.range -10) then
         CastSpell(_W)
     end
 end
@@ -155,8 +197,8 @@ function CastWFerocity()
     end
 end
 
-function CastQ()
-    if ValidTarget(ts.target, Skill.Q.range) then
+function CastQ(Target)
+    if ValidTarget(Target, Skill.Q.range) then
           CastSpell(_Q)
     end
 end
@@ -165,13 +207,15 @@ end
 -- OnDraw Function
 --------------------------------------------------------
 function OnDraw()
-    if Menu.Combo.Normal.useW and WREADY then
-        DrawCircle(myHero.x, myHero.y, myHero.z, Skill.W.range, 0x00FF00)
+    if Menu.Draw.w and Menu.Combo.Normal.useW and WREADY then
+        DrawCircle(myHero.x, myHero.y, myHero.z, Skill.W.range, 0x111111)
     end
-    if Menu.Combo.Normal.useE and EREADY then
+    if Menu.Draw.e and Menu.Combo.Normal.useE and EREADY then
         DrawCircle(myHero.x, myHero.y, myHero.z, Skill.E.range, 0x111111)  
     end
-    DrawCircle(myHero.x, myHero.y, myHero.z, Skill.Q.range, 0x111111)
+    if Menu.Draw.ad then
+        DrawCircle(myHero.x, myHero.y, myHero.z, Skill.Q.range, 0x111111)
+    end
 end
 
 --------------------------------------------------------
@@ -179,8 +223,12 @@ end
 --------------------------------------------------------
 function OnCreateObj(object)
   if object.name:find("Rengar_Base_P_Buf_Max.troy") then
-    --PrintChat("Ferocity ON")
-    Ferocity = true
+      --PrintChat("Ferocity ON")
+      Ferocity = true
+  end
+  if object.name:find("Rengar_Base_R_Cas.troy") then
+      --PrintChat("I am Stealth")
+      Stealth = true
   end
 end
 
@@ -189,18 +237,10 @@ function OnDeleteObj(object)
     --PrintChat("Ferocity OFF")
     Ferocity = false
   end
-end
-
-function OnWndMsg(msg,key)
-
-end
-
-function OnSendChat(txt)
-
-end
-
-function OnProcessSpell(owner,spell)
-
+  if object.name:find("Rengar_Base_R_Buf.troy") then
+      --PrintChat("No more Stealth")
+      Stealth = false
+  end
 end
 
 --------------------------------------------------------
@@ -221,12 +261,21 @@ function Menu()
     Menu.Combo.Ferocity:addParam("useW", "(W) - Use "..Skill.W.name, SCRIPT_PARAM_ONOFF, true)
     Menu.Combo.Ferocity:addParam("useWhp", "(W) - Min. % HP to Cast Spell", SCRIPT_PARAM_SLICE, 65, 0, 100, 0)
     Menu.Combo.Ferocity:addParam("useE", "(E) - Use "..Skill.E.name, SCRIPT_PARAM_ONOFF, true)
+    
+  Menu:addSubMenu("Harass Setting", "Harass")
+    Menu.Harass:addParam("key", "Harass Key", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
+    Menu.Harass:addParam("useE", "(E) - Use "..Skill.E.name, SCRIPT_PARAM_ONOFF, true)
   
   Menu:addSubMenu("Lane Clear Settings", "LaneClear")
     Menu.LaneClear:addParam("key", "Lane Clear Key", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("V"))
     Menu.LaneClear:addParam("useQ", "(Q) - Use "..Skill.Q.name, SCRIPT_PARAM_ONOFF, true)
     Menu.LaneClear:addParam("useW", "(W) - Use "..Skill.W.name, SCRIPT_PARAM_ONOFF, true)
     Menu.LaneClear:addParam("useE", "(E) - Use "..Skill.E.name, SCRIPT_PARAM_ONOFF, false)
+    
+  Menu:addSubMenu("Draw Settings", "Draw")
+    Menu.Draw:addParam("ad", "(AD) - Draw Attack range", SCRIPT_PARAM_ONOFF, true)
+    Menu.Draw:addParam("w", "(W) - Draw "..Skill.W.name.." range", SCRIPT_PARAM_ONOFF, true)
+    Menu.Draw:addParam("e", "(E) - Draw "..Skill.E.name.." range", SCRIPT_PARAM_ONOFF, true)
       
   Menu:addSubMenu("Orbwalking Settings", "Orbwalking")
     SOW:LoadToMenu(Menu.Orbwalking)
@@ -234,4 +283,6 @@ function Menu()
   ts = TargetSelector(TARGET_CLOSEST, Skill.E.range, DAMAGE_PHYSIC, false)
   ts.name = "Rengar"
   Menu:addTS(ts)
+  
+  enemyMinions = minionManager(MINION_ENEMY, Skill.E.range, myHero, MINION_SORT_MAXHEALTH_DEC)
 end
