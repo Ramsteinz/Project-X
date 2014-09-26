@@ -3,6 +3,10 @@
 --          
 --             Rengar - The Pentakiller
 --  
+--  v1.01
+--    -- KS with Ignite
+--    -- Some items cast added
+--  
 --  v1.00
 --    - Released
 --           
@@ -12,7 +16,7 @@ if myHero.charName ~= "Rengar" then return end
 --------------------------------------------------------
 --  Update Libs and Main Script
 --------------------------------------------------------
-local version = "1.04"
+local version = "1.01"
 local DOWNLOADING_LIBS, DOWNLOAD_COUNT = false, 0
 local UPDATE_NAME = "Rengar - The Pentakiller"
 local UPDATE_HOST = "raw.github.com"
@@ -80,8 +84,8 @@ end
 -- Variables
 --------------------------------------------------------
 local IG = nil
-local TIASlot, RHSlot,  BCSlot, BRKSlot = nil, nil, nil, nil
-local TIAReady, RHReady, BCReady, BRKReady = false, false, false, false
+local TIASlot, RHSlot,  BCSlot, BRKSlot, YGSlot = nil, nil, nil, nil, nil
+local TIAReady, RHReady, BCReady, BRKReady, YGReady = false, false, false, false, false
 
 --------------------------------------------------------
 -- Champion Specific Data
@@ -112,10 +116,11 @@ end
 -- OnTick Function
 --------------------------------------------------------
 function OnTick()  
-  TIASlot = GetInventorySlotItem(3077) --
-  RHSlot = GetInventorySlotItem(3074) --
-  BCSlot = GetInventorySlotItem(3144) --
-  BRKSlot = GetInventorySlotItem(3153) --
+  TIASlot = GetInventorySlotItem(3077) -- Tiamat
+  RHSlot = GetInventorySlotItem(3074) -- Ravenous Hydra
+  BCSlot = GetInventorySlotItem(3144) -- Bilgewater Cutlass
+  BRKSlot = GetInventorySlotItem(3153) -- Blade of the Ruined King
+  YGSlot = GetInventorySlotItem(3142) -- Youmuu's Ghostblade
 
   QREADY = myHero:CanUseSpell(_Q) == READY
   WREADY = myHero:CanUseSpell(_W) == READY
@@ -125,6 +130,7 @@ function OnTick()
   RHReady = (RHSlot ~= nil and myHero:CanUseSpell(RHSlot) == READY)
   BCReady = (BCSlot ~= nil and myHero:CanUseSpell(BCSlot) == READY)
   BRKReady = (BRKSlot ~= nil and myHero:CanUseSpell(BRKSlot) == READY)
+  YGReady = (YGSlot ~= nil and myHero:CanUseSpell(YGSlot) == READY)
   
   ts:update()
   enemyMinions:update()
@@ -251,6 +257,9 @@ function CastItem()
     end
     if BRKReady and ValidTarget(ts.target, Skill.W.range) then
         CastSpell(BRKSlot, ts.target)
+    end
+    if YGReady and ValidTarget(ts.target, Skill.W.range) then
+        CastSpell(YGSlot, ts.target)
     end
 end
 
