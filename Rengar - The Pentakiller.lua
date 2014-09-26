@@ -12,7 +12,7 @@ if myHero.charName ~= "Rengar" then return end
 --------------------------------------------------------
 --  Update Libs and Main Script
 --------------------------------------------------------
-local version = "1.00"
+local version = "1.01"
 local DOWNLOADING_LIBS, DOWNLOAD_COUNT = false, 0
 local UPDATE_NAME = "Rengar - The Pentakiller"
 local UPDATE_HOST = "raw.github.com"
@@ -166,14 +166,26 @@ end
 function LaneClear()
     if enemyMinions ~= nil then
         for _, minion in pairs(enemyMinions.objects) do
-            if Menu.LaneClear.useQ then
-                CastQ(minion)
-            end
-            if Menu.LaneClear.useW then
-                CastW(minion)
-            end
-            if Menu.LaneClear.useE then
-                CastE(minion)
+            if not Ferocity then
+                if Menu.LaneClear.useQ and QREADY then
+                    CastQ(minion)
+                end
+                if Menu.LaneClear.useW and WREADY then
+                    CastW(minion)
+                end
+                if Menu.LaneClear.useE and EREADY then
+                    CastE(minion)
+                end
+            else
+                if Menu.Combo.Ferocity.useW and WREADY then
+                    CastWFerocity()
+                end
+                if Menu.Combo.Ferocity.useQ and QREADY then
+                    CastQ(minion)
+                end
+                if Menu.Combo.Ferocity.useE and EREADY then
+                    CastE(minion)
+                end
             end
         end
     end
