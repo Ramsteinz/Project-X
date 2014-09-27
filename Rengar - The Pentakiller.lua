@@ -5,7 +5,8 @@
 --  
 --  v1.01
 --    -- KS with Ignite
---    -- Some items cast added
+--    -- Support some items auto cast
+--    -- Free Lag Drawing
 --  
 --  v1.00
 --    - Released
@@ -95,7 +96,7 @@ function HeroData()
   Skill = {
     Q = { name = "Savagery", range = myHero.range + GetDistance(myHero, myHero.minBBox) },
     W = { name = "Battle Roar", range = 400 },
-    E = { name = "Bola Strike", range = 1000, delay = 0.5, width = 70, speed = 1500, col = true },
+    E = { name = "Bola Strike", range = 1000, delay = 0, width = 70, speed = 1500, col = true },
     R = { name = "Thrill of the Hunt" }
   }
 end
@@ -276,14 +277,51 @@ end
 --------------------------------------------------------
 function OnDraw()
     if Menu.Draw.w and Menu.Combo.Normal.useW and WREADY then
-        DrawCircle(myHero.x, myHero.y, myHero.z, Skill.W.range, 0x111111)
+        if Menu.Draw.freeLag then
+            DrawCircleFL(myHero.x, myHero.y, myHero.z, Skill.W.range, ARGB(150, 128, 128, 128))
+        else
+            DrawCircle(myHero.x, myHero.y, myHero.z, Skill.W.range, 0x111111)
+        end
     end
     if Menu.Draw.e and Menu.Combo.Normal.useE and EREADY then
-        DrawCircle(myHero.x, myHero.y, myHero.z, Skill.E.range, 0x111111)  
+        if Menu.Draw.freeLag then
+            DrawCircleFL(myHero.x, myHero.y, myHero.z, Skill.E.range, ARGB(150, 128, 128, 128))
+        else
+            DrawCircle(myHero.x, myHero.y, myHero.z, Skill.E.range, 0x111111)  
+        end
     end
     if Menu.Draw.ad then
-        DrawCircle(myHero.x, myHero.y, myHero.z, Skill.Q.range, 0x111111)
+        if Menu.Draw.freeLag then
+            DrawCircleFL(myHero.x, myHero.y, myHero.z, Skill.Q.range, ARGB(150, 128, 128, 128))
+        else
+            DrawCircle(myHero.x, myHero.y, myHero.z, Skill.Q.range, 0x111111)
+        end
     end
+end
+
+function DrawCircleFL(x, y, z, radius, color)
+  local vPos1 = Vector(x, y, z)
+  local vPos2 = Vector(cameraPos.x, cameraPos.y, cameraPos.z)
+  local tPos = vPos1 - (vPos1 - vPos2):normalized() * radius
+  local sPos = WorldToScreen(D3DXVECTOR3(tPos.x, tPos.y, tPos.z))
+  if Menu.Draw.freeLag and OnScreen({ x = sPos.x, y = sPos.y }, { x = sPos.x, y = sPos.y })  then
+    DrawCircleNextLvl(x, y, z, radius, 1, color, 75)
+  else
+    DrawCircle(x, y, z, radius, 0xFF111111)
+  end
+end
+
+function DrawCircleNextLvl(x, y, z, radius, width, color, chordlength)
+  radius = radius or 300
+  quality = math.max(8,math.floor(180/math.deg((math.asin((chordlength/(2*radius)))))))
+  quality = 2 * math.pi / quality
+  radius = radius*.92
+  local points = {}
+  for theta = 0, 2 * math.pi + quality, quality do
+    local c = WorldToScreen(D3DXVECTOR3(x + radius * math.cos(theta), y, z - radius * math.sin(theta)))
+    points[#points + 1] = D3DXVECTOR2(c.x, c.y)
+  end
+  DrawLines2(points, width or 1, color or 4294967295)
 end
 
 --------------------------------------------------------
@@ -337,7 +375,7 @@ function Menu()
     Menu.Combo.Ferocity:addParam("useQ", "(Q) - Use "..Skill.Q.name, SCRIPT_PARAM_ONOFF, true)
     Menu.Combo.Ferocity:addParam("useW", "(W) - Use "..Skill.W.name, SCRIPT_PARAM_ONOFF, true)
     Menu.Combo.Ferocity:addParam("useWhp", "(W) - Min. % HP to Cast Spell", SCRIPT_PARAM_SLICE, 65, 0, 100, 0)
-    Menu.Combo.Ferocity:addParam("useE", "(E) - Use "..Skill.E.name, SCRIPT_PARAM_ONOFF, true)
+    Menu.Combo.Ferocity:addParam("useE", "(E) - Use "..Skill.E.name, SCRIPT_PARAM_ONOFF, false)
     
   Menu:addSubMenu("Harass Setting", "Harass")
     Menu.Harass:addParam("key", "Harass Key", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
@@ -350,6 +388,7 @@ function Menu()
     Menu.LaneClear:addParam("useE", "(E) - Use "..Skill.E.name, SCRIPT_PARAM_ONOFF, false)
     
   Menu:addSubMenu("Draw Settings", "Draw")
+    Menu.Draw:addParam("freeLag", "Use Free Lag Draw", SCRIPT_PARAM_ONOFF, false)
     Menu.Draw:addParam("ad", "(AD) - Draw Attack range", SCRIPT_PARAM_ONOFF, true)
     Menu.Draw:addParam("w", "(W) - Draw "..Skill.W.name.." range", SCRIPT_PARAM_ONOFF, true)
     Menu.Draw:addParam("e", "(E) - Draw "..Skill.E.name.." range", SCRIPT_PARAM_ONOFF, true)
@@ -357,7 +396,7 @@ function Menu()
   Menu:addSubMenu("Extra Settings", "Extra")
     Menu.Extra:addSubMenu("Auto Level", "Level")
     Menu.Extra.Level:addParam("auto", "Enable auto level", SCRIPT_PARAM_ONOFF, false)
-    Menu.Extra.Level:addParam("seq", "Auto Leel Sequence", SCRIPT_PARAM_LIST, 1, { "RQEW" })
+    Menu.Extra.Level:addParam("seq", "Auto Level Sequence", SCRIPT_PARAM_LIST, 1, { "RQEW" })
       
   Menu:addSubMenu("Orbwalking Settings", "Orbwalking")
     SOW:LoadToMenu(Menu.Orbwalking)
