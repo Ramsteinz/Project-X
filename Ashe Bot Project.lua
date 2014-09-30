@@ -3,7 +3,7 @@
 --          
 --                 Ashe Bot Project
 --                     
---  v1.0.0
+--  v1.00
 --    - Released
 --           
 --------------------------------------------------------
@@ -12,7 +12,7 @@ if myHero.charName ~= "Ashe" then return end
 --------------------------------------------------------
 --  Update Libs and Main Script
 --------------------------------------------------------
-local version = "1.0.0"
+local version = "1.00"
 local DOWNLOADING_LIBS, DOWNLOAD_COUNT = false, 0
 local UPDATE_NAME = "Ashe Bot Project"
 local UPDATE_HOST = "raw.github.com"
