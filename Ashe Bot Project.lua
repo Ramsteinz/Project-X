@@ -3,7 +3,7 @@
 --          
 --                 Ashe Bot Project
 --                     
---  v1.00
+--  v1.0.0
 --    - Released
 --           
 --------------------------------------------------------
@@ -12,7 +12,7 @@ if myHero.charName ~= "Ashe" then return end
 --------------------------------------------------------
 --  Update Libs and Main Script
 --------------------------------------------------------
-local version = "1.00"
+local version = "1.0.0"
 local DOWNLOADING_LIBS, DOWNLOAD_COUNT = false, 0
 local UPDATE_NAME = "Ashe Bot Project"
 local UPDATE_HOST = "raw.github.com"
@@ -67,33 +67,4 @@ if _G.UseUpdater then
   else
     AutoupdaterMsg("Error downloading version info")
   end
-end
-
-function OnLoad()
-
-end
-
--- handles script logic, a pure high speed loop
-function OnTick()
-
-end
-
---handles overlay drawing (processing is not recommended here,use onTick() for that)
-function OnDraw()
-
-end
-
---handles input
-function OnWndMsg(msg,key)
-
-end
-
--- listens to chat input
-function OnSendChat(txt)
-
-end
-
--- listens to spell
-function OnProcessSpell(owner,spell)
-
 end
