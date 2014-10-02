@@ -2,6 +2,9 @@
 --                Ramsteinz Present
 --          
 --             Karthus - King of Dead
+--             
+--  v1.05
+--    - LastHit - Check if the minion are in pairs or not
 --  
 --  v1.04
 --    - Harass (Q) mode added [free/Vip]
@@ -30,7 +33,7 @@ if myHero.charName ~= "Karthus" then return end
 --------------------------------------------------------
 --  Update Libs and Main Script
 --------------------------------------------------------
-local version = "1.04"
+local version = "1.05"
 local DOWNLOADING_LIBS, DOWNLOAD_COUNT = false, 0
 local UPDATE_NAME = "Karthus - King of Dead"
 local UPDATE_HOST = "raw.github.com"
@@ -323,29 +326,35 @@ end
 -- LastHit Function
 --------------------------------------------------------
 function LastHit()
-  if enemyMinions ~= nil then
-    for _, minion in pairs(enemyMinions.objects) do
-      if ValidTarget(minion, Skill.Q.range) then
-        local CastPosition, HitChance, nTargets = VP:GetCircularAOECastPosition(minion, Skill.Q.delay, Skill.Q.width, Skill.Q.range, Skill.Q.speed, myHero)
-        if minion.health < getDmg("Q", minion, myHero, 1) then
-          if HitChance >= 2 and nTargets == 1 then
-            if not Menu.Combo.key and Menu.LastHit.auto then
-              CastSpell(_Q, CastPosition.x, CastPosition.z)
+    if enemyMinions ~= nil then
+        for i, minioni in pairs(enemyMinions.objects) do
+            local inpair = false
+            for j, minionj in pairs(enemyMinions.objects) do
+                if GetDistance(minioni, minionj) <= Skill.Q.width and GetDistance(minioni, minionj) ~= 0 then
+                    inpair = true
+                    break
+                else
+                    inpair = false
+                end
             end
-            if Menu.LastHit.key then
-              CastSpell(_Q, CastPosition.x, CastPosition.z)
+            if inpair then
+                if minioni.health <= getDmg("Q", minioni, myHero) / 2 then
+                    local CastPosition, HitChance, nTargets = VP:GetCircularAOECastPosition(minioni, Skill.Q.delay, Skill.Q.width, Skill.Q.range, Skill.Q.speed, myHero)
+                    if HitChance >= 2 and nTargets >= 1 then
+                        CastSpell(_Q, minioni.x, minioni.z)
+                    end
+                end
+            else
+                if minioni.health <= getDmg("Q", minioni, myHero) then
+                    local CastPosition, HitChance, nTargets = VP:GetCircularAOECastPosition(minioni, Skill.Q.delay, Skill.Q.width, Skill.Q.range, Skill.Q.speed, myHero)
+                    if HitChance >= 2 and nTargets >= 1 then
+                        CastSpell(_Q, minioni.x, minioni.z)
+                    end
+                end
             end
-          end
         end
-      end
     end
-  end
 end
-
---------------------------------------------------------
--- Farm Function
---------------------------------------------------------
-
 
 --------------------------------------------------------
 -- OnDraw Function
@@ -374,15 +383,6 @@ function OnDraw()
     end
     if Menu.Draw.Target.circle then
       DrawCircle2(ts.target.x, ts.target.y, ts.target.z, 150, ARGB(75, 128, 128, 128))
-    end
-  end
-  if enemyMinions ~= nil then
-    for _, minion in pairs(enemyMinions.objects) do
-      if ValidTarget(minion, Skill.Q.range) then
-        if  minion.health < getDmg("Q", minion, myHero) then
-          DrawCircle2(minion.x, minion.y, minion.z, Vector(minion.x, minion.y, minion.z):dist(Vector(minion.minBBox.x, minion.minBBox.y, minion.minBBox.z)), ARGB(175, 255, 50, 0))
-        end
-      end
     end
   end
 end
