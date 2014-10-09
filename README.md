@@ -1,4 +1,0 @@
-Project-X
-=========
-
-BoL Scripts
