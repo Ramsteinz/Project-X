@@ -16,7 +16,7 @@ local version = "1.00"
 local DOWNLOADING_LIBS, DOWNLOAD_COUNT = false, 0
 local UPDATE_NAME = "Project-X Ahri"
 local UPDATE_HOST = "raw.github.com"
-local UPDATE_PATH = "/Ramsteinz/Project-X/master/Karma.lua" .. "?rand=" .. math.random(1, 10000)
+local UPDATE_PATH = "/Ramsteinz/Project-X/master/Project-X%20Ahri.lua" .. "?rand=" .. math.random(1, 10000)
 local UPDATE_FILE_PATH = SCRIPT_PATH..UPDATE_NAME..".lua"
 local UPDATE_URL = "http://"..UPDATE_HOST..UPDATE_PATH
 local REQUIRED_LIBS = nil
